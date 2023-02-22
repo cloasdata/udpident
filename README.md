@@ -6,7 +6,7 @@ Developed for ESP8266 on arduino framework but should run on other machines as w
 You typically use this library to identify a device on a given LAN but you know determine the IP address before compile time. For example the device needs to follow [DCHP](https://en.wikipedia.org/wiki/Dynamic_Host_Configuration_Protocol).
 
 There are more [modern ways](https://en.wikipedia.org/wiki/Dynamic_Host_Configuration_Protocol) to accomplish this instead of UDP broadcasting.
-However, this way is light waited and easy to understand.
+However, this way is light weighted and easy to understand.
 
 # How it works
 First a device sends a udp broadcast package (magic packet) to the corresponding subnet. For example 192.168.1.255.
