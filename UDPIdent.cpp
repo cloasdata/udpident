@@ -7,26 +7,31 @@
 
 namespace UDPIdent{
 
-    const char magicPacket[] = "SSS_REQ";
+    const char magicPacket[] {"SSS_REQ"};
     const uint8_t lenMagicPacket = sizeof(magicPacket)-1;
     
-    const char magicReply[] = "SSS_ACK";
+    const char magicReply[] {"SSS_ACK"};
     const uint8_t lenReplyPacket = sizeof(magicPacket)-1;
     
-    // create global UDP server
-    WiFiUDP UDP;
+    // global UDP server
+    WiFiUDP *UDP = nullptr;
 
     /* Start UDP Server. 
     May interfere with other network activies.
     */
     void begin(){
-        UDP.begin(UDPPORT);
+        if (!UDP){
+            UDP = new WiFiUDP();
+        }
+        UDP->begin(UDPPORT);
     }
 
     /* Stop all packets and destroy UDP server*/
     void end(){
-        UDP.stopAll();
-        UDP.~WiFiUDP();
+        if (UDP){
+            UDP->stopAll();
+            delete UDP;
+        }
     }
 
     /* Pair checks UDP stream for magic message. Received will send a acknowledge
@@ -34,8 +39,8 @@ namespace UDPIdent{
     */
     bool pair(IPAddress &with){
         if (discovered()){
-            with = UDP.remoteIP();
-            ackwnoledge();
+            with = UDP->remoteIP();
+            acknowledge();
             Serial1.print("Paired with: " + with.toString() + "\n");
             return true;
         }
@@ -44,11 +49,11 @@ namespace UDPIdent{
 
     /*Discovers magic message from UDP Stream*/
     bool discovered(){
-        uint16_t packetSize = UDP.parsePacket();
+        uint16_t packetSize = UDP->parsePacket();
         if (packetSize == lenMagicPacket){
             Serial1.printf("Found %d byte long packet:", packetSize );
             char pBuffer[lenMagicPacket];
-            uint16_t len = UDP.read(pBuffer, lenMagicPacket);
+            UDP->read(pBuffer, lenMagicPacket);
             Serial1.printf("%s\n", pBuffer);
             if (strcmp(magicPacket, pBuffer)) {
                 return true;
@@ -61,31 +66,31 @@ namespace UDPIdent{
     }
 
     /*Send magic acknowledge to broadcaster*/
-    void ackwnoledge(){
-        UDP.beginPacket(UDP.remoteIP(), UDP.remotePort());
-        UDP.write(magicReply);
-        UDP.endPacket();
+    void acknowledge(){
+        UDP->beginPacket(UDP->remoteIP(), UDP->remotePort());
+        UDP->write(magicReply);
+        UDP->endPacket();
     }
 
     /*Sends UDP broadcast to WiFi.broadcastIP()
     i.e. 192.169.1.255
     */
     void broadcast(){
-        UDP.beginPacket(WiFi.broadcastIP(), UDPPORT);
-        UDP.write(magicPacket);
-        UDP.endPacket();
+        UDP->beginPacket(WiFi.broadcastIP(), UDPPORT);
+        UDP->write(magicPacket);
+        UDP->endPacket();
     }
 
     /* Identifies network station by filtering the UDP Stream for the magic 
     acknowledge message. 
     */
     bool identify(IPAddress &identifiedIP){
-        uint16_t packetSize = UDP.parsePacket();
+        uint16_t packetSize = UDP->parsePacket();
         if (packetSize == lenReplyPacket){
             char pBuffer[lenReplyPacket];
-            uint16_t len = UDP.read(pBuffer, lenReplyPacket);
+            UDP->read(pBuffer, lenReplyPacket);
             if (strcmp(magicReply, pBuffer)){
-                identifiedIP = UDP.remoteIP();
+                identifiedIP = UDP->remoteIP();
                 return true;
             }
             

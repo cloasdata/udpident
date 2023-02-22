@@ -16,7 +16,7 @@ namespace UDPIdent
 
     bool discovered();
 
-    void ackwnoledge();
+    void acknowledge();
 
     void broadcast();
 
